@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Permutador de Horarios</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #22263a;
+    --border: #2e3352;
+    --accent: #5b8cf7;
+    --accent2: #a78bfa;
+    --text: #e8eaf6;
+    --text-muted: #7b82a8;
+    --success: #34d399;
+    --danger: #f87171;
+    --warn: #fbbf24;
+    --radius: 10px;
+    --font: 'Segoe UI', system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: var(--font); min-height: 100vh; }
+
+  header {
+    background: linear-gradient(135deg, #1a1d27 0%, #12162b 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 20px 32px;
+    display: flex; align-items: center; gap: 14px;
+  }
+  header .logo {
+    width: 40px; height: 40px; background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px;
+  }
+  header h1 { font-size: 1.3rem; font-weight: 700; letter-spacing: -0.3px; }
+  header p { font-size: 0.8rem; color: var(--text-muted); margin-top: 2px; }
+
+  main { max-width: 1100px; margin: 0 auto; padding: 32px 24px; }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    margin-bottom: 20px;
+  }
+  .card-title {
+    font-size: 0.75rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 1.2px; color: var(--accent); margin-bottom: 16px;
+  }
+
+  label { font-size: 0.85rem; color: var(--text-muted); display: block; margin-bottom: 6px; }
+  input[type=text], input[type=number], select {
+    background: var(--surface2); border: 1px solid var(--border);
+    color: var(--text); border-radius: 7px; padding: 9px 13px;
+    font-size: 0.9rem; width: 100%; outline: none;
+    transition: border-color 0.2s;
+  }
+  input:focus, select:focus { border-color: var(--accent); }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 10px 20px; border-radius: 8px; font-size: 0.875rem;
+    font-weight: 600; cursor: pointer; border: none; transition: all 0.2s;
+  }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { background: #4a7ce8; transform: translateY(-1px); }
+  .btn-primary:disabled { background: var(--border); color: var(--text-muted); cursor: not-allowed; transform: none; }
+  .btn-success { background: var(--success); color: #0f1117; }
+  .btn-success:hover { background: #2bc88e; }
+  .btn-danger { background: transparent; border: 1px solid var(--danger); color: var(--danger); padding: 6px 12px; font-size: 0.8rem; }
+  .btn-danger:hover { background: var(--danger); color: #fff; }
+  .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-muted); }
+  .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-sm { padding: 6px 13px; font-size: 0.8rem; }
+
+  .step-indicator {
+    display: flex; gap: 8px; margin-bottom: 28px; align-items: center;
+  }
+  .step { display: flex; align-items: center; gap: 8px; }
+  .step-num {
+    width: 28px; height: 28px; border-radius: 50%; background: var(--surface2);
+    border: 2px solid var(--border); display: flex; align-items: center;
+    justify-content: center; font-size: 0.75rem; font-weight: 700; color: var(--text-muted);
+  }
+  .step.active .step-num { border-color: var(--accent); color: var(--accent); background: rgba(91,140,247,0.12); }
+  .step.done .step-num { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .step-label { font-size: 0.8rem; color: var(--text-muted); }
+  .step.active .step-label { color: var(--text); }
+  .step-sep { flex: 1; height: 1px; background: var(--border); max-width: 40px; }
+
+  /* Materias list */
+  .materia-item {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 16px 18px; margin-bottom: 12px;
+  }
+  .materia-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+  .materia-color-dot { width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0; }
+  .materia-name { font-weight: 600; font-size: 0.95rem; flex: 1; }
+  .ncr-list { margin-top: 10px; }
+  .ncr-item {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 6px; padding: 10px 14px; margin-bottom: 8px;
+    font-size: 0.82rem;
+  }
+  .ncr-item-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+  .ncr-tag {
+    background: rgba(91,140,247,0.15); color: var(--accent);
+    padding: 2px 8px; border-radius: 4px; font-size: 0.72rem; font-weight: 700;
+  }
+
+  /* Grid horario input */
+  .horario-grid { overflow-x: auto; }
+  .horario-table { border-collapse: collapse; width: 100%; min-width: 520px; font-size: 0.75rem; }
+  .horario-table th {
+    background: var(--surface2); color: var(--text-muted); padding: 7px 6px;
+    text-align: center; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.8px; border: 1px solid var(--border);
+  }
+  .horario-table td { border: 1px solid var(--border); padding: 3px; }
+  .hora-label { background: var(--surface2); color: var(--text-muted); padding: 6px 8px; font-size: 0.7rem; white-space: nowrap; text-align: right; }
+  .hora-check {
+    width: 100%; height: 28px; cursor: pointer;
+    background: transparent; border: none; border-radius: 4px;
+    transition: background 0.15s; display: flex; align-items: center; justify-content: center;
+  }
+  .hora-check:hover { background: rgba(91,140,247,0.15); }
+  .hora-check.selected { background: rgba(91,140,247,0.3); }
+
+  /* Resultados */
+  .results-header {
+    display: flex; align-items: center; gap: 16px; margin-bottom: 20px; flex-wrap: wrap;
+  }
+  .stat-pill {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 20px; padding: 6px 14px; font-size: 0.8rem;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .stat-pill .num { font-weight: 700; color: var(--accent); }
+
+  .horario-result {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 10px; padding: 16px; margin-bottom: 16px;
+  }
+  .horario-result-title {
+    font-size: 0.8rem; font-weight: 700; color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .dia-libre-badge {
+    background: rgba(52,211,153,0.15); color: var(--success);
+    border: 1px solid rgba(52,211,153,0.3); border-radius: 5px;
+    padding: 2px 8px; font-size: 0.7rem;
+  }
+
+  .result-table { border-collapse: collapse; width: 100%; font-size: 0.73rem; min-width: 480px; }
+  .result-table th {
+    background: var(--surface); color: var(--text-muted); padding: 6px 8px;
+    text-align: center; border: 1px solid var(--border); font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.6px;
+  }
+  .result-table td {
+    border: 1px solid var(--border); padding: 5px 6px;
+    text-align: center; vertical-align: middle; height: 30px;
+  }
+  .result-table .hora-col { color: var(--text-muted); font-size: 0.65rem; white-space: nowrap; background: var(--surface); }
+  .cell-content { border-radius: 4px; padding: 3px 5px; font-size: 0.68rem; font-weight: 600; line-height: 1.3; }
+
+  /* Filter bar */
+  .filter-bar { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; align-items: center; }
+  .filter-chip {
+    padding: 5px 12px; border-radius: 16px; font-size: 0.78rem;
+    border: 1px solid var(--border); background: transparent;
+    color: var(--text-muted); cursor: pointer; transition: all 0.15s;
+  }
+  .filter-chip:hover, .filter-chip.active { border-color: var(--success); color: var(--success); background: rgba(52,211,153,0.08); }
+
+  .empty-state { text-align: center; padding: 48px 20px; color: var(--text-muted); }
+  .empty-state .icon { font-size: 3rem; margin-bottom: 12px; }
+  .empty-state p { font-size: 0.9rem; }
+
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 600px) { .row2 { grid-template-columns: 1fr; } }
+  .flex { display: flex; align-items: center; }
+  .gap2 { gap: 8px; }
+  .gap3 { gap: 12px; }
+  .mt2 { margin-top: 8px; }
+  .mt3 { margin-top: 14px; }
+  .mb2 { margin-bottom: 8px; }
+  .text-muted { color: var(--text-muted); font-size: 0.82rem; }
+
+  #toast {
+    position: fixed; bottom: 24px; right: 24px;
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 10px; padding: 12px 18px; font-size: 0.85rem;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4); transform: translateY(20px);
+    opacity: 0; transition: all 0.3s; pointer-events: none; z-index: 999;
+  }
+  #toast.show { opacity: 1; transform: translateY(0); }
+
+  .page { display: none; }
+  .page.active { display: block; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">📅</div>
+  <div>
+    <h1>Permutador de Horarios</h1>
+    <p>Genera todas las combinaciones posibles sin choques</p>
+  </div>
+</header>
+
+<main>
+  <div class="step-indicator" id="stepIndicator">
+    <div class="step active" id="step1">
+      <div class="step-num">1</div>
+      <div class="step-label">Materias</div>
+    </div>
+    <div class="step-sep"></div>
+    <div class="step" id="step2">
+      <div class="step-num">2</div>
+      <div class="step-label">NCR / Horarios</div>
+    </div>
+    <div class="step-sep"></div>
+    <div class="step" id="step3">
+      <div class="step-num">3</div>
+      <div class="step-label">Resultados</div>
+    </div>
+  </div>
+
+  <!-- PASO 1: Configurar materias -->
+  <div class="page active" id="pageMaterias">
+    <div class="card">
+      <div class="card-title">¿Cuántas materias vas a matricular?</div>
+      <div style="max-width:260px">
+        <label>Número de materias (1–15)</label>
+        <input type="number" id="numMaterias" min="1" max="15" value="3" style="width:120px">
+      </div>
+      <div class="mt3">
+        <button class="btn btn-primary" onclick="iniciarMaterias()">Continuar →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PASO 2: Ingresar datos de cada materia -->
+  <div class="page" id="pageNCR">
+    <div id="materiasContainer"></div>
+    <div class="flex gap2 mt3">
+      <button class="btn btn-outline" onclick="volverPaso1()">← Atrás</button>
+      <button class="btn btn-success" onclick="procesarHorarios()">⚡ Generar horarios</button>
+    </div>
+  </div>
+
+  <!-- PASO 3: Resultados -->
+  <div class="page" id="pageResultados">
+    <div class="card">
+      <div class="results-header" id="resultsHeader"></div>
+      <div class="filter-bar" id="filterBar"></div>
+      <div id="resultsContainer"></div>
+    </div>
+    <div class="flex gap2 mt3">
+      <button class="btn btn-outline" onclick="volverPaso2()">← Modificar horarios</button>
+      <button class="btn btn-outline" onclick="volverPaso1()">↺ Empezar de nuevo</button>
+    </div>
+  </div>
+</main>
+
+<div id="toast"></div>
+
+<script>
+const HORAS = [
+  '7:00','8:00','9:00','10:00','11:00','12:00',
+  '13:00','14:00','15:00','16:00','17:00','18:00',
+  '19:00','20:00','21:00','22:00','23:00'
+];
+const DIAS = ['Lunes','Martes','Miércoles','Jueves','Viernes'];
+const DIAS_SHORT = ['L','M','X','J','V'];
+
+const PALETTE = [
+  '#5b8cf7','#a78bfa','#34d399','#fbbf24','#f87171',
+  '#38bdf8','#fb923c','#e879f9','#4ade80','#f472b6',
+  '#a3e635','#2dd4bf','#fb7185','#818cf8','#facc15'
+];
+
+let materias = []; // {nombre, color, horas, ncrs: [{nombre, horario: bool[17][5]}]}
+let numMaterias = 3;
+
+function showToast(msg, dur=2500) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), dur);
+}
+
+function setStep(n) {
+  for (let i = 1; i <= 3; i++) {
+    const el = document.getElementById('step' + i);
+    el.classList.remove('active','done');
+    if (i < n) el.classList.add('done');
+    else if (i === n) el.classList.add('active');
+  }
+}
+
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function iniciarMaterias() {
+  numMaterias = parseInt(document.getElementById('numMaterias').value);
+  if (isNaN(numMaterias) || numMaterias < 1 || numMaterias > 15) {
+    showToast('⚠️ Ingresa entre 1 y 15 materias'); return;
+  }
+  // Initialize materias array
+  materias = Array.from({length: numMaterias}, (_, i) => ({
+    nombre: '',
+    color: PALETTE[i % PALETTE.length],
+    horas: 3,
+    ncrs: [{nombre: '', horario: Array.from({length:17}, () => Array(5).fill(false))}]
+  }));
+  renderMaterias();
+  setStep(2);
+  showPage('pageNCR');
+}
+
+function renderMaterias() {
+  const container = document.getElementById('materiasContainer');
+  container.innerHTML = '';
+  materias.forEach((mat, mi) => {
+    const div = document.createElement('div');
+    div.className = 'card';
+    div.innerHTML = `
+      <div class="card-title" style="display:flex;align-items:center;gap:10px">
+        <div style="width:12px;height:12px;border-radius:50%;background:${mat.color};flex-shrink:0"></div>
+        Materia ${mi+1}
+        <input type="color" value="${mat.color}" style="width:28px;height:22px;border:none;background:none;cursor:pointer;border-radius:4px"
+          onchange="materias[${mi}].color='${mat.color}'; materias[${mi}].color=this.value; renderMaterias()">
+      </div>
+      <div class="row2" style="margin-bottom:14px">
+        <div>
+          <label>Nombre de la materia</label>
+          <input type="text" placeholder="Ej: Cálculo III" value="${mat.nombre}"
+            oninput="materias[${mi}].nombre=this.value">
+        </div>
+        <div>
+          <label>Horas semanales</label>
+          <input type="number" min="1" max="17" value="${mat.horas}" style="width:90px"
+            onchange="materias[${mi}].horas=parseInt(this.value)||1">
+        </div>
+      </div>
+      <div class="card-title" style="margin-bottom:10px">Secciones / NCR</div>
+      <div id="ncrs_${mi}">${renderNCRs(mi)}</div>
+      <button class="btn btn-outline btn-sm mt2" onclick="addNCR(${mi})">+ Agregar otra sección</button>
+    `;
+    container.appendChild(div);
+  });
+  // Re-bind checkbox events
+  materias.forEach((mat, mi) => {
+    mat.ncrs.forEach((ncr, ni) => {
+      ncr.horario.forEach((row, hi) => {
+        row.forEach((val, di) => {
+          const cb = document.getElementById(`cb_${mi}_${ni}_${hi}_${di}`);
+          if (cb) cb.classList.toggle('selected', val);
+        });
+      });
+    });
+  });
+}
+
+function renderNCRs(mi) {
+  return materias[mi].ncrs.map((ncr, ni) => `
+    <div class="ncr-item" id="ncritem_${mi}_${ni}">
+      <div class="ncr-item-header">
+        <span class="ncr-tag">NCR ${ni+1}</span>
+        <div class="flex gap2">
+          <input type="text" placeholder="Nombre profesor (opcional)" value="${ncr.nombre}"
+            style="width:200px" oninput="materias[${mi}].ncrs[${ni}].nombre=this.value">
+          ${materias[mi].ncrs.length > 1 ? `<button class="btn btn-danger btn-sm" onclick="removeNCR(${mi},${ni})">✕</button>` : ''}
+        </div>
+      </div>
+      <div class="horario-grid">
+        ${buildGridHTML(mi, ni)}
+      </div>
+      <div class="mt2 text-muted" id="contador_${mi}_${ni}">
+        Seleccionadas: <span id="count_${mi}_${ni}">${ncr.horario.flat().filter(Boolean).length}</span>
+        / ${materias[mi].horas} horas requeridas
+      </div>
+    </div>
+  `).join('');
+}
+
+function buildGridHTML(mi, ni) {
+  let html = `<table class="horario-table"><thead><tr>
+    <th style="width:60px">Hora</th>
+    ${DIAS.map(d=>`<th>${d}</th>`).join('')}
+  </tr></thead><tbody>`;
+  for (let h = 0; h < 17; h++) {
+    html += `<tr><td class="hora-label">${HORAS[h]}</td>`;
+    for (let d = 0; d < 5; d++) {
+      const checked = materias[mi].ncrs[ni].horario[h][d];
+      html += `<td><button class="hora-check${checked?' selected':''}"
+        id="cb_${mi}_${ni}_${h}_${d}"
+        onclick="toggleCelda(${mi},${ni},${h},${d})"></button></td>`;
+    }
+    html += '</tr>';
+  }
+  html += '</tbody></table>';
+  return html;
+}
+
+function toggleCelda(mi, ni, h, d) {
+  materias[mi].ncrs[ni].horario[h][d] = !materias[mi].ncrs[ni].horario[h][d];
+  const btn = document.getElementById(`cb_${mi}_${ni}_${h}_${d}`);
+  btn.classList.toggle('selected', materias[mi].ncrs[ni].horario[h][d]);
+  const total = materias[mi].ncrs[ni].horario.flat().filter(Boolean).length;
+  const countEl = document.getElementById(`count_${mi}_${ni}`);
+  if (countEl) countEl.textContent = total;
+}
+
+function addNCR(mi) {
+  materias[mi].ncrs.push({nombre:'', horario: Array.from({length:17},()=>Array(5).fill(false))});
+  const container = document.getElementById(`ncrs_${mi}`);
+  container.innerHTML = renderNCRs(mi);
+}
+
+function removeNCR(mi, ni) {
+  materias[mi].ncrs.splice(ni, 1);
+  const container = document.getElementById(`ncrs_${mi}`);
+  container.innerHTML = renderNCRs(mi);
+}
+
+function volverPaso1() {
+  setStep(1); showPage('pageMaterias');
+}
+function volverPaso2() {
+  renderMaterias(); setStep(2); showPage('pageNCR');
+}
+
+function procesarHorarios() {
+  // Validar
+  for (let mi = 0; mi < materias.length; mi++) {
+    const mat = materias[mi];
+    if (!mat.nombre.trim()) { showToast(`⚠️ Ingresa el nombre de la materia ${mi+1}`); return; }
+    for (let ni = 0; ni < mat.ncrs.length; ni++) {
+      const total = mat.ncrs[ni].horario.flat().filter(Boolean).length;
+      if (total !== mat.horas) {
+        showToast(`⚠️ ${mat.nombre} NCR ${ni+1}: seleccionaste ${total} de ${mat.horas} horas`);
+        return;
+      }
+    }
+  }
+
+  // Generar todas las combinaciones (producto cartesiano)
+  const indices = materias.map((_,i) => materias[i].ncrs.map((_,j)=>j));
+  const combinaciones = cartesiano(indices);
+
+  // Filtrar combinaciones válidas (sin choques)
+  const validas = [];
+  const conDiaLibre = [];
+
+  for (const combo of combinaciones) {
+    const grid = Array.from({length:17},()=>Array(5).fill(null));
+    let choque = false;
+    for (let mi = 0; mi < materias.length; mi++) {
+      const ni = combo[mi];
+      const horario = materias[mi].ncrs[ni].horario;
+      for (let h = 0; h < 17; h++) {
+        for (let d = 0; d < 5; d++) {
+          if (horario[h][d]) {
+            if (grid[h][d] !== null) { choque = true; break; }
+            grid[h][d] = mi;
+          }
+        }
+        if (choque) break;
+      }
+      if (choque) break;
+    }
+    if (!choque) {
+      const result = {combo, grid};
+      validas.push(result);
+      // Check día libre
+      for (let d = 0; d < 5; d++) {
+        let libre = true;
+        for (let h = 0; h < 17; h++) {
+          if (grid[h][d] !== null) { libre = false; break; }
+        }
+        if (libre) { conDiaLibre.push({...result, diaLibre: d}); break; }
+      }
+    }
+  }
+
+  renderResultados(validas, conDiaLibre, combinaciones.length);
+  setStep(3);
+  showPage('pageResultados');
+}
+
+function cartesiano(arrays) {
+  return arrays.reduce((acc, arr) => {
+    return acc.flatMap(a => arr.map(b => [...a, b]));
+  }, [[]]);
+}
+
+function renderResultados(validas, conDiaLibre, total) {
+  const header = document.getElementById('resultsHeader');
+  header.innerHTML = `
+    <div class="stat-pill">Total combinaciones: <span class="num">${total}</span></div>
+    <div class="stat-pill" style="border-color:${validas.length>0?'var(--success)':'var(--danger)'}">
+      ✅ Viables: <span class="num" style="color:${validas.length>0?'var(--success)':'var(--danger)'}">${validas.length}</span>
+    </div>
+    <div class="stat-pill" style="border-color:var(--warn)">
+      🌙 Con día libre: <span class="num" style="color:var(--warn)">${conDiaLibre.length}</span>
+    </div>
+  `;
+
+  const filterBar = document.getElementById('filterBar');
+  filterBar.innerHTML = `
+    <span style="font-size:0.8rem;color:var(--text-muted)">Filtrar:</span>
+    <button class="filter-chip active" id="chip-todos" onclick="filtrar('todos')">Todos (${validas.length})</button>
+    <button class="filter-chip" id="chip-libres" onclick="filtrar('libres')">Con día libre (${conDiaLibre.length})</button>
+    ${DIAS.map((d,i)=>`<button class="filter-chip" id="chip-libre-${i}" onclick="filtrar('dia-${i}')">Libre ${d} (${conDiaLibre.filter(h=>h.diaLibre===i).length})</button>`).join('')}
+  `;
+
+  window._validas = validas;
+  window._conDiaLibre = conDiaLibre;
+  filtrar('todos');
+}
+
+function filtrar(modo) {
+  document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+  let lista;
+  if (modo === 'todos') {
+    lista = window._validas;
+    document.getElementById('chip-todos')?.classList.add('active');
+  } else if (modo === 'libres') {
+    lista = window._conDiaLibre;
+    document.getElementById('chip-libres')?.classList.add('active');
+  } else {
+    const di = parseInt(modo.split('-')[1]);
+    lista = window._conDiaLibre.filter(h=>h.diaLibre===di);
+    document.getElementById(`chip-libre-${di}`)?.classList.add('active');
+  }
+
+  const container = document.getElementById('resultsContainer');
+  if (!lista || lista.length === 0) {
+    container.innerHTML = `<div class="empty-state"><div class="icon">😕</div><p>No hay horarios en esta categoría</p></div>`;
+    return;
+  }
+
+  container.innerHTML = lista.map((item, idx) => {
+    const diaLibreName = item.diaLibre !== undefined ? DIAS[item.diaLibre] : null;
+    const comboLabel = item.combo.map((ni,mi) => {
+      const ncr = materias[mi].ncrs[ni];
+      return `<span style="background:${materias[mi].color}22;color:${materias[mi].color};border:1px solid ${materias[mi].color}44;padding:2px 7px;border-radius:4px;font-size:0.7rem;font-weight:600">${materias[mi].nombre}${ncr.nombre?' – '+ncr.nombre:' NCR '+(ni+1)}</span>`;
+    }).join(' ');
+
+    let tableHTML = `<div style="overflow-x:auto"><table class="result-table"><thead><tr>
+      <th style="width:56px">Hora</th>
+      ${DIAS.map((d,di)=>`<th style="${item.diaLibre===di?'color:var(--success);background:rgba(52,211,153,0.07)':''}">${d}</th>`).join('')}
+    </tr></thead><tbody>`;
+
+    // Build merged rows
+    const grid = item.grid;
+    const merged = Array.from({length:17},()=>Array(5).fill(null));
+    // track spans
+    const spanInfo = Array.from({length:17},()=>Array(5).fill({skip:false,span:1}));
+    for (let d = 0; d < 5; d++) {
+      let h = 0;
+      while (h < 17) {
+        if (grid[h][d] !== null) {
+          let span = 1;
+          while (h+span < 17 && grid[h+span][d] === grid[h][d]) span++;
+          spanInfo[h][d] = {skip:false,span};
+          for (let s=1;s<span;s++) spanInfo[h+s][d]={skip:true,span:1};
+          h += span;
+        } else { h++; }
+      }
+    }
+
+    for (let h = 0; h < 17; h++) {
+      tableHTML += `<tr><td class="hora-col">${HORAS[h]}</td>`;
+      for (let d = 0; d < 5; d++) {
+        if (spanInfo[h][d].skip) continue;
+        const mi = grid[h][d];
+        const span = spanInfo[h][d].span;
+        if (mi !== null) {
+          const col = materias[mi].color;
+          const ni = item.combo[mi];
+          const ncrNombre = materias[mi].ncrs[ni].nombre;
+          tableHTML += `<td rowspan="${span}" style="background:${col}22;border-color:${col}66">
+            <div class="cell-content" style="color:${col}">
+              ${materias[mi].nombre}${ncrNombre?'<br><span style="font-weight:400;font-size:0.62rem">'+ncrNombre+'</span>':''}
+            </div></td>`;
+        } else {
+          const diaLibre = item.diaLibre === d;
+          tableHTML += `<td style="${diaLibre?'background:rgba(52,211,153,0.05)':''}"></td>`;
+        }
+      }
+      tableHTML += '</tr>';
+    }
+    tableHTML += '</tbody></table></div>';
+
+    return `
+      <div class="horario-result">
+        <div class="horario-result-title">
+          Horario ${idx+1}
+          ${diaLibreName ? `<span class="dia-libre-badge">🌙 ${diaLibreName} libre</span>` : ''}
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px">${comboLabel}</div>
+        ${tableHTML}
+      </div>`;
+  }).join('');
+}
+</script>
+</body>
+</html>
